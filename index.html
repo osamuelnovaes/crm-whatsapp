@@ -352,8 +352,8 @@
         <div style="display: flex; align-items: center; gap: 1rem;">
             <h1>📱 CRM Simple</h1>
             <a href="https://web.whatsapp.com" target="_blank" class="btn" style="background: rgba(255,255,255,0.2);">💬 WhatsApp Web</a>
-            <button class="btn" style="background: rgba(255,255,255,0.2);" onclick="document.getElementById('import-file').click()">📥 Importar XLSX</button>
-            <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="importXLSX(event)">
+            <button class="btn" style="background: rgba(255,255,255,0.2);" onclick="document.getElementById('import-file').click()">📥 Importar XLSX/CSV</button>
+            <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importXLSX(event)">
         </div>
         <button class="btn btn-primary" onclick="openModal()">+ Novo Contato</button>
     </header>
@@ -741,50 +741,74 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            console.log('Arquivo selecionado:', file.name);
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    console.log('Sheets:', workbook.SheetNames);
+                    
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
 
-                if (jsonData.length < 2) {
-                    alert('Arquivo vazio ou sem dados!');
-                    return;
-                }
+                    console.log('Dados lidos:', jsonData.length, 'linhas');
 
-                const headers = jsonData[0].map(h => String(h).toLowerCase().trim());
-                const nameIdx = headers.findIndex(h => h.includes('nome') || h.includes('name'));
-                const phoneIdx = headers.findIndex(h => h.includes('telefone') || h.includes('phone') || h.includes('whatsapp'));
-                const emailIdx = headers.findIndex(h => h.includes('email') || h.includes('e-mail'));
-                const companyIdx = headers.findIndex(h => h.includes('empresa') || h.includes('company') || h.includes('loja'));
-                const statusIdx = headers.findIndex(h => h.includes('status'));
-                const notesIdx = headers.findIndex(h => h.includes('nota') || h.includes('obs') || h.includes('observação'));
-
-                let imported = 0;
-                for (let i = 1; i < jsonData.length; i++) {
-                    const row = jsonData[i];
-                    const name = row[nameIdx];
-                    const phone = row[phoneIdx];
-
-                    if (name || phone) {
-                        contacts.push({
-                            id: Date.now().toString() + i,
-                            name: name || 'Sem nome',
-                            phone: String(phone || '').replace(/\D/g, ''),
-                            email: row[emailIdx] || '',
-                            company: row[companyIdx] || '',
-                            status: row[statusIdx] || 'lead',
-                            notes: row[notesIdx] || ''
-                        });
-                        imported++;
+                    if (!jsonData || jsonData.length < 2) {
+                        alert('Arquivo vazio ou sem dados!');
+                        return;
                     }
-                }
 
-                saveData();
-                renderContacts();
-                renderStats();
-                alert(`Importados ${imported} contatos com sucesso!`);
+                    const headers = jsonData[0].map(h => String(h).toLowerCase().trim());
+                    console.log('Cabeçalhos:', headers);
+                    
+                    const nameIdx = headers.findIndex(h => h.includes('nome') || h.includes('name'));
+                    const phoneIdx = headers.findIndex(h => h.includes('telefone') || h.includes('phone') || h.includes('whatsapp'));
+                    const emailIdx = headers.findIndex(h => h.includes('email') || h.includes('e-mail'));
+                    const companyIdx = headers.findIndex(h => h.includes('empresa') || h.includes('company') || h.includes('loja'));
+                    const statusIdx = headers.findIndex(h => h.includes('status'));
+                    const notesIdx = headers.findIndex(h => h.includes('nota') || h.includes('obs') || h.includes('observação'));
+
+                    console.log('Índices - Nome:', nameIdx, 'Telefone:', phoneIdx);
+
+                    if (nameIdx === -1 && phoneIdx === -1) {
+                        alert('Não encontrou colunas de Nome ou Telefone! Verifique os cabeçalhos.');
+                        return;
+                    }
+
+                    let imported = 0;
+                    for (let i = 1; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        let name = row[nameIdx];
+                        let phone = row[phoneIdx];
+
+                        if (name || phone) {
+                            contacts.push({
+                                id: Date.now().toString() + i,
+                                name: name || 'Sem nome',
+                                phone: String(phone || '').replace(/\D/g, ''),
+                                email: row[emailIdx] || '',
+                                company: row[companyIdx] || '',
+                                status: row[statusIdx] || 'lead',
+                                message: '',
+                                notes: row[notesIdx] || ''
+                            });
+                            imported++;
+                        }
+                    }
+
+                    saveData();
+                    renderContacts();
+                    renderStats();
+                    alert(`Importados ${imported} contatos com sucesso!`);
+                } catch (err) {
+                    console.error('Erro:', err);
+                    alert('Erro ao importar: ' + err.message);
+                }
+            };
+            reader.onerror = function() {
+                alert('Erro ao ler arquivo!');
             };
             reader.readAsArrayBuffer(file);
             event.target.value = '';
