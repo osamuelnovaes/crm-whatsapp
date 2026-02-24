@@ -505,12 +505,22 @@
             const total = contacts.length;
             const customers = contacts.filter(c => c.status === 'customer').length;
             const leads = contacts.filter(c => c.status === 'lead').length;
+            const sent = contacts.filter(c => c.sent).length;
+            const notSent = contacts.filter(c => !c.sent).length;
             const totalValue = deals.filter(d => d.stage !== 'lost' && d.stage !== 'won').reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0);
 
             document.getElementById('stats').innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${total}</div>
                     <div class="stat-label">Total Contatos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: #28a745;">${sent}</div>
+                    <div class="stat-label">Enviados ✅</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: #ffc107;">${notSent}</div>
+                    <div class="stat-label">Pendentes ⏳</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${customers}</div>
@@ -540,17 +550,19 @@
                 return;
             }
 
+            const defaultMessage = `Oi, tudo bem? Me chamo Samuel, trabalho com audiovisual desde 2015 e ajudo marcas e agências a terem vídeos de qualidade com agilidade na entrega. Atendo clientes de Bauru até Ubatuba. Já participei de projetos como gravações dos cursos da Giovanna Antonelli, vídeos para o Ibis Hotel, trabalhos para o Sicredi, produções para a academia X Prime e gravação de clipes para alguns players do audiovisual. Busco me conectar com agências que queiram um parceiro de confiança em vídeo para somar nos projetos e facilitar o dia a dia do time. Poderíamos ter uma conversa rápida sobre possíveis parcerias em audiovisual? Podemos alinhar por aqui mesmo ou marcar uma call.`;
+
             document.getElementById('contacts-list').innerHTML = filtered.map(contact => {
-                const msg = encodeURIComponent(contact.message || `Olá ${contact.name}! Tudo bem?`);
+                const msg = encodeURIComponent(contact.message || defaultMessage);
                 return `
                 <div class="contact-card">
                     <div class="contact-info">
-                        <h3>${contact.name} <span class="tag tag-${contact.status}">${contact.status === 'lead' ? 'Lead' : contact.status === 'customer' ? 'Cliente' : 'Inativo'}</span></h3>
+                        <h3>${contact.name} <span class="tag tag-${contact.status}">${contact.status === 'lead' ? 'Lead' : contact.status === 'customer' ? 'Cliente' : 'Inativo'}</span>${contact.sent ? ' ✅' : ' ⏳'}</h3>
                         <p>${contact.company || 'Sem empresa'} • ${contact.email || 'Sem email'}</p>
-                        ${contact.message ? `<p style="color: var(--primary); font-size: 0.85rem;">💬 ${contact.message.substring(0, 50)}${contact.message.length > 50 ? '...' : ''}</p>` : ''}
                     </div>
                     <div class="contact-actions">
                         <a href="https://wa.me/${contact.phone}?text=${msg}" target="_blank" class="btn btn-whatsapp btn-icon" title="WhatsApp">💬</a>
+                        <button class="btn ${contact.sent ? 'btn-danger' : 'btn-primary'}" onclick="toggleSent('${contact.id}')" title="${contact.sent ? 'Desmarcar' : 'Marcar como enviado'}">${contact.sent ? '❌' : '✅'}</button>
                         <button class="btn btn-primary" onclick="editContact('${contact.id}')" title="Editar">✏️</button>
                         <button class="btn btn-danger" onclick="deleteContact('${contact.id}')" title="Excluir">🗑️</button>
                     </div>
@@ -560,6 +572,15 @@
 
         function filterContacts() {
             renderContacts();
+        }
+
+        function toggleSent(id) {
+            const contact = contacts.find(c => c.id === id);
+            if (contact) {
+                contact.sent = !contact.sent;
+                saveData();
+                renderContacts();
+            }
         }
 
         function renderPipeline() {
@@ -649,7 +670,8 @@
                 company: document.getElementById('company').value,
                 status: document.getElementById('status').value,
                 message: document.getElementById('message').value,
-                notes: document.getElementById('notes').value
+                notes: document.getElementById('notes').value,
+                sent: isEdit ? isEdit.sent : false
             };
 
             if (isEdit) {
@@ -783,7 +805,8 @@
                                 company: '',
                                 status: 'lead',
                                 message: '',
-                                notes: ''
+                                notes: '',
+                                sent: false
                             });
                             imported++;
                         }
