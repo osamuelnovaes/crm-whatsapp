@@ -420,6 +420,10 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Mensagem WhatsApp</label>
+                    <input type="text" id="message" placeholder="Mensagem padrão para enviar...">
+                </div>
+                <div class="form-group">
                     <label>Notas</label>
                     <textarea id="notes" placeholder="Observações sobre o contato..."></textarea>
                 </div>
@@ -536,19 +540,22 @@
                 return;
             }
 
-            document.getElementById('contacts-list').innerHTML = filtered.map(contact => `
+            document.getElementById('contacts-list').innerHTML = filtered.map(contact => {
+                const msg = encodeURIComponent(contact.message || `Olá ${contact.name}! Tudo bem?`);
+                return `
                 <div class="contact-card">
                     <div class="contact-info">
                         <h3>${contact.name} <span class="tag tag-${contact.status}">${contact.status === 'lead' ? 'Lead' : contact.status === 'customer' ? 'Cliente' : 'Inativo'}</span></h3>
                         <p>${contact.company || 'Sem empresa'} • ${contact.email || 'Sem email'}</p>
+                        ${contact.message ? `<p style="color: var(--primary); font-size: 0.85rem;">💬 ${contact.message.substring(0, 50)}${contact.message.length > 50 ? '...' : ''}</p>` : ''}
                     </div>
                     <div class="contact-actions">
-                        <a href="https://wa.me/${contact.phone}?text=${encodeURIComponent('Olá ' + contact.name + '!')}" target="_blank" class="btn btn-whatsapp btn-icon" title="WhatsApp">💬</a>
+                        <a href="https://wa.me/${contact.phone}?text=${msg}" target="_blank" class="btn btn-whatsapp btn-icon" title="WhatsApp">💬</a>
                         <button class="btn btn-primary" onclick="editContact('${contact.id}')" title="Editar">✏️</button>
                         <button class="btn btn-danger" onclick="deleteContact('${contact.id}')" title="Excluir">🗑️</button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function filterContacts() {
@@ -617,6 +624,7 @@
                 document.getElementById('email').value = contact.email || '';
                 document.getElementById('company').value = contact.company || '';
                 document.getElementById('status').value = contact.status;
+                document.getElementById('message').value = contact.message || '';
                 document.getElementById('notes').value = contact.notes || '';
             } else {
                 document.getElementById('contact-form').reset();
@@ -640,6 +648,7 @@
                 email: document.getElementById('email').value,
                 company: document.getElementById('company').value,
                 status: document.getElementById('status').value,
+                message: document.getElementById('message').value,
                 notes: document.getElementById('notes').value
             };
 
