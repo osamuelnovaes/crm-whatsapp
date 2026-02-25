@@ -3,576 +3,660 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Simple - Gestión de Clientes</title>
+    <title>CRM WhatsApp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-        :root {
-            --primary: #25D366;
-            --dark: #128C7E;
-            --light: #DCF8C6;
-            --bg: #f5f5f5;
-            --white: #ffffff;
-            --gray: #666;
-            --danger: #e74c3c;
-        }
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: rgba(30, 41, 59, 0.8);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #334155;
+  --border-light: rgba(148, 163, 184, 0.15);
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --success: #22c55e;
+  --whatsapp: #25D366;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --transition: 0.2s ease;
+}
 
-        body {
-            background: var(--bg);
-            min-height: 100vh;
-        }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-        header {
-            background: var(--primary);
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
+html, body, #root { height: 100%; width: 100%; overflow: hidden; }
 
-        header h1 {
-            font-size: 1.5rem;
-        }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
 
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
+.app-layout { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
+.sidebar {
+  width: 240px; min-width: 240px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
 
-        .btn-primary:hover {
-            background: var(--dark);
-        }
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
 
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center; color: white;
+  font-size: 20px;
+}
 
-        .btn-whatsapp {
-            background: #34B7F1;
-            color: white;
-        }
+.logo-text {
+  font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
+  color: #25D366;
+}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
+.logo-tag {
+  font-size: 10px; font-weight: 600; color: var(--accent);
+  background: rgba(99, 102, 241, 0.15);
+  padding: 2px 6px; border-radius: 4px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
 
-        .tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 0.5rem;
-        }
+.sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
 
-        .tab {
-            padding: 0.75rem 1.5rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            color: var(--gray);
-            border-radius: 6px 6px 0 0;
-            transition: all 0.2s;
-        }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border: none; background: none;
+  color: var(--text-secondary); font-size: 14px; font-weight: 500;
+  cursor: pointer; border-radius: var(--radius-sm);
+  transition: all var(--transition); width: 100%; text-align: left;
+}
 
-        .tab.active {
-            background: var(--primary);
-            color: white;
-        }
+.nav-item:hover { background: rgba(148, 163, 184, 0.08); color: var(--text-primary); }
+.nav-item.active { background: rgba(37, 211, 102, 0.12); color: #25D366; }
 
-        .card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 1rem;
-        }
+.sidebar-actions {
+  padding: 16px 12px; border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+}
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
+.action-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 14px; border: none; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all var(--transition); font-family: inherit; text-decoration: none;
+}
 
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
+.action-btn.primary { background: linear-gradient(135deg, #25D366, #128C7E); color: white; }
+.action-btn.primary:hover { background: linear-gradient(135deg, #1ea852, #0d6e5e); transform: translateY(-1px); }
 
-        .form-group {
-            margin-bottom: 1rem;
-        }
+.action-btn.secondary { background: rgba(148, 163, 184, 0.1); color: var(--text-secondary); border: 1px solid var(--border); }
+.action-btn.secondary:hover { background: rgba(148, 163, 184, 0.15); color: var(--text-primary); }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--gray);
-        }
+.action-btn.whatsapp { background: #25D366; color: white; }
+.action-btn.whatsapp:hover { background: #1ea852; }
 
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
+.main-content { flex: 1; overflow: hidden; background: var(--bg-primary); display: flex; flex-direction: column; }
 
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
+.pipeline-view { display: flex; flex-direction: column; height: 100%; }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
+.pipeline-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px; gap: 20px;
+}
 
-        .modal.active {
-            display: flex;
-        }
+.pipeline-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
 
-        .modal-content {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 2rem;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
+.pipeline-filters { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
+.search-bar { position: relative; max-width: 360px; flex: 1; }
 
-        .modal-header h2 {
-            font-size: 1.3rem;
-        }
+.search-input {
+  width: 100%; padding: 8px 14px 8px 40px;
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text-primary);
+  font-size: 13px; font-family: inherit; outline: none;
+}
 
-        .close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--gray);
-        }
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+.search-input::placeholder { color: var(--text-muted); }
 
-        .contact-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid #eee;
-        }
+.pipeline-board {
+  display: flex; gap: 12px; padding: 0 24px 24px;
+  flex: 1; overflow-x: auto; overflow-y: hidden;
+}
 
-        .contact-info h3 {
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
-        }
+.pipeline-column {
+  min-width: 260px; width: 260px;
+  display: flex; flex-direction: column;
+  background: rgba(30, 41, 59, 0.4);
+  border-radius: var(--radius-md); border: 1px solid var(--border-light);
+}
 
-        .contact-info p {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
+.pipeline-column-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  border-top-left-radius: var(--radius-md); border-top-right-radius: var(--radius-md);
+}
 
-        .contact-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
+.column-header-left { display: flex; align-items: center; gap: 8px; }
 
-        .btn-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
+.column-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 
-        .pipeline {
-            display: flex;
-            gap: 1rem;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-        }
+.column-count {
+  font-size: 12px; font-weight: 700;
+  padding: 2px 8px; border-radius: 12px; min-width: 24px; text-align: center;
+}
 
-        .pipeline-column {
-            min-width: 280px;
-            background: var(--white);
-            border-radius: 12px;
-            padding: 1rem;
-        }
+.pipeline-column-body {
+  flex: 1; padding: 8px; display: flex; flex-direction: column;
+  gap: 8px; overflow-y: auto; min-height: 100px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
 
-        .pipeline-header {
-            font-weight: 600;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--primary);
-        }
+.column-empty {
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; color: var(--text-muted); font-size: 12px;
+  font-style: italic; opacity: 0.6;
+}
 
-        .pipeline-item {
-            background: var(--bg);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+.lead-card {
+  background: var(--bg-secondary); border-radius: var(--radius-sm);
+  padding: 10px; cursor: grab; border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex; flex-direction: column; gap: 8px; position: relative;
+}
 
-        .pipeline-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+.lead-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border); }
+.lead-card:active { cursor: grabbing; }
 
-        .pipeline-item h4 {
-            font-size: 0.95rem;
-            margin-bottom: 0.5rem;
-        }
+.lead-card.sent { border-left: 3px solid var(--success); }
+.lead-card.pending { border-left: 3px solid #fbbf24; }
 
-        .pipeline-item .value {
-            color: var(--primary);
-            font-weight: 600;
-        }
+.lead-card-header { display: flex; align-items: flex-start; gap: 8px; }
 
-        .tag {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
+.lead-card-name { font-size: 13px; font-weight: 500; color: var(--text-primary); flex: 1; line-height: 1.4; }
 
-        .tag-lead { background: #FFF3CD; color: #856404; }
-        .tag-customer { background: #D4EDDA; color: #155724; }
-        .tag-inactive { background: #F8D7DA; color: #721C24; }
+.lead-card-delete {
+  background: transparent; border: none; color: var(--text-muted);
+  padding: 4px; border-radius: 4px; cursor: pointer;
+  opacity: 0; transition: all 0.2s ease;
+}
 
-        .history-item {
-            padding: 1rem;
-            border-left: 3px solid var(--primary);
-            background: var(--bg);
-            margin-bottom: 0.75rem;
-            border-radius: 0 8px 8px 0;
-        }
+.lead-card:hover .lead-card-delete { opacity: 0.6; }
+.lead-card-delete:hover { opacity: 1 !important; color: var(--danger); background: rgba(239, 68, 68, 0.1); }
 
-        .history-date {
-            font-size: 0.8rem;
-            color: var(--gray);
-            margin-bottom: 0.25rem;
-        }
+.lead-card-info { display: flex; flex-direction: column; gap: 4px; }
 
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: var(--gray);
-        }
+.lead-card-detail {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
-        .search-bar {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
+.lead-card-status {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 12px;
+  font-size: 10px; font-weight: 500;
+}
 
-        .search-bar input {
-            flex: 1;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
+.lead-card-status.sent { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+.lead-card-status.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
+.lead-card-whatsapp {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 6px 10px; background: #25D366; color: white;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 11px; font-weight: 500; cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none; margin-top: 6px;
+}
 
-        .stat-card {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
+.lead-card-whatsapp:hover { background: #1ea852; }
 
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
+.lead-card-actions {
+  display: flex; gap: 6px; margin-top: 6px; padding-top: 6px;
+  border-top: 1px solid var(--border-light);
+}
 
-        .stat-label {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
+.lead-card-actions button {
+  flex: 1; padding: 6px; border: none; border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 11px; font-weight: 500;
+  transition: all var(--transition); background: var(--bg-tertiary); color: var(--text-secondary);
+}
 
-        @media (max-width: 768px) {
-            .container { padding: 1rem; }
-            .pipeline { flex-direction: column; }
-            .pipeline-column { min-width: 100%; }
-        }
+.lead-card-actions button:hover { background: var(--accent); color: white; }
+.lead-card-actions button.sent-btn { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+.lead-card-actions button.sent-btn:hover { background: var(--danger); color: white; }
+
+/* Stats */
+.stats-bar { display: flex; gap: 12px; padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); }
+
+.stat-item { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg-tertiary); border-radius: var(--radius-sm); }
+
+.stat-value { font-size: 16px; font-weight: 700; }
+.stat-value.sent { color: var(--success); }
+.stat-value.pending { color: #fbbf24; }
+.stat-value.total { color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-secondary); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+
+.modal {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg); border: 1px solid var(--border);
+  width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+}
+
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 18px; font-weight: 600; }
+.modal-close { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 24px; }
+.modal-close:hover { color: var(--text-primary); }
+
+.modal-body { padding: 24px; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  font-size: 14px; font-family: inherit;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+.form-textarea { min-height: 80px; resize: vertical; }
+
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end; }
+
+.btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 14px; font-weight: 500; transition: all var(--transition); }
+.btn-primary { background: linear-gradient(135deg, #25D366, #128C7E); color: white; }
+.btn-primary:hover { background: linear-gradient(135deg, #1ea852, #0d6e5e); }
+.btn-secondary { background: var(--bg-tertiary); color: var(--text-secondary); }
+.btn-secondary:hover { background: var(--border); color: var(--text-primary); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { background: var(--danger-hover); }
+
+.hidden { display: none !important; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     </style>
 </head>
 <body>
-        <header>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <h1>📱 CRM Simple</h1>
-            <a href="https://web.whatsapp.com" target="_blank" class="btn" style="background: rgba(255,255,255,0.2);">💬 WhatsApp Web</a>
-            <button class="btn" style="background: rgba(255,255,255,0.2);" onclick="document.getElementById('import-file').click()">📥 Importar XLSX/CSV</button>
-            <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importXLSX(event)">
-        </div>
-        <button class="btn btn-primary" onclick="openModal()">+ Novo Contato</button>
-    </header>
-
-    <div class="container">
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('contacts')">Contatos</button>
-            <button class="tab" onclick="switchTab('pipeline')">Pipeline</button>
-            <button class="tab" onclick="switchTab('history')">Histórico</button>
-        </div>
-
-        <div id="contacts-tab">
-            <div class="stats" id="stats"></div>
-            <div class="search-bar">
-                <input type="text" id="search" placeholder="Buscar contatos..." oninput="filterContacts()">
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon">💬</div>
+                <h1 class="logo-text">WhatsApp</h1>
+                <span class="logo-tag">CRM</span>
             </div>
-            <div class="card">
-                <div id="contacts-list"></div>
-            </div>
-        </div>
 
-        <div id="pipeline-tab" style="display: none;">
-            <div class="pipeline" id="pipeline"></div>
-        </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" onclick="switchView('contacts')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Contatos</span>
+                </button>
+                <button class="nav-item" onclick="switchView('dashboard')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                    <span>Dashboard</span>
+                </button>
+            </nav>
 
-        <div id="history-tab" style="display: none;">
-            <div class="card">
-                <h2 class="card-title" style="margin-bottom: 1rem;">Histórico de Atividades</h2>
-                <div id="history-list"></div>
+            <div class="sidebar-actions">
+                <button class="action-btn primary" onclick="openModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Novo Contato</span>
+                </button>
+                <button class="action-btn secondary" onclick="document.getElementById('import-file').click()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Importar XLSX</span>
+                </button>
+                <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importXLSX(event)">
+                <a href="https://web.whatsapp.com" target="_blank" class="action-btn whatsapp">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    <span>WhatsApp Web</span>
+                </a>
             </div>
-        </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Contatos View -->
+            <div id="contacts-view" class="pipeline-view">
+                <div class="pipeline-header">
+                    <h2 class="pipeline-title">Contatos</h2>
+                    <div class="pipeline-filters">
+                        <div class="search-bar">
+                            <input type="text" class="search-input" placeholder="Buscar contatos..." id="search-input" oninput="filterContacts()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-value total" id="stat-total">0</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value pending" id="stat-pending">0</span>
+                        <span class="stat-label">Pendentes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value sent" id="stat-sent">0</span>
+                        <span class="stat-label">Enviados</span>
+                    </div>
+                </div>
+
+                <div class="pipeline-board" id="pipeline-board" style="flex-wrap: wrap; padding: 20px 24px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="hidden" style="padding: 24px;">
+                <div class="pipeline-header">
+                    <h2 class="pipeline-title">Dashboard</h2>
+                </div>
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-value total" id="dash-total">0</span>
+                        <span class="stat-label">Total de Contatos</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value sent" id="dash-sent">0</span>
+                        <span class="stat-label">Enviados</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value pending" id="dash-pending">0</span>
+                        <span class="stat-label">Pendentes</span>
+                    </div>
+                </div>
+                <div class="pipeline-board" id="dashboard-board" style="flex-wrap: wrap; padding: 0; overflow-y: auto;"></div>
+            </div>
+        </main>
     </div>
 
-    <div class="modal" id="modal">
-        <div class="modal-content">
+    <!-- Modal -->
+    <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalOutside(event)">
+        <div class="modal">
             <div class="modal-header">
-                <h2 id="modal-title">Novo Contato</h2>
-                <button class="close" onclick="closeModal()">&times;</button>
+                <h3 class="modal-title" id="modal-title">Novo Contato</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <form id="contact-form" onsubmit="saveContact(event)">
-                <input type="hidden" id="contact-id">
-                <div class="form-group">
-                    <label>Nome</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label>Telefone</label>
-                    <input type="tel" id="phone" placeholder="5511999999999" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="email">
-                </div>
-                <div class="form-group">
-                    <label>Empresa</label>
-                    <input type="text" id="company">
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="status">
-                        <option value="lead">Lead</option>
-                        <option value="customer">Cliente</option>
-                        <option value="inactive">Inativo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Mensagem WhatsApp</label>
-                    <input type="text" id="message" placeholder="Mensagem padrão para enviar...">
-                </div>
-                <div class="form-group">
-                    <label>Notas</label>
-                    <textarea id="notes" placeholder="Observações sobre o contato..."></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Salvar</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal" id="deal-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Nova Oportunidade</h2>
-                <button class="close" onclick="closeDealModal()">&times;</button>
+            <div class="modal-body">
+                <form id="contact-form" onsubmit="saveContact(event)">
+                    <input type="hidden" id="contact-id">
+                    <div class="form-group">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-input" id="contact-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telefone</label>
+                        <input type="tel" class="form-input" id="contact-phone" placeholder="5511999999999">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="contact-email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Empresa</label>
+                        <input type="text" class="form-input" id="contact-company">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="contact-status">
+                            <option value="lead">Lead</option>
+                            <option value="customer">Cliente</option>
+                            <option value="inactive">Inativo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-textarea" id="contact-notes"></textarea>
+                    </div>
+                </form>
             </div>
-            <form id="deal-form" onsubmit="saveDeal(event)">
-                <div class="form-group">
-                    <label>Título</label>
-                    <input type="text" id="deal-title" required>
-                </div>
-                <div class="form-group">
-                    <label>Contato</label>
-                    <select id="deal-contact" required></select>
-                </div>
-                <div class="form-group">
-                    <label>Valor (R$)</label>
-                    <input type="number" id="deal-value" required>
-                </div>
-                <div class="form-group">
-                    <label>Estágio</label>
-                    <select id="deal-stage">
-                        <option value="new">Novo</option>
-                        <option value="contacted">Contatado</option>
-                        <option value="proposal">Proposta</option>
-                        <option value="negotiation">Negociação</option>
-                        <option value="won">Ganho</option>
-                        <option value="lost">Perdido</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Salvar</button>
-            </form>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-danger" id="delete-btn" onclick="deleteContact()" style="display:none;">Excluir</button>
+                <button class="btn btn-primary" onclick="document.getElementById('contact-form').requestSubmit()">Salvar</button>
+            </div>
         </div>
     </div>
 
     <script>
+        const defaultMessage = `Oi, tudo bem? Me chamo Samuel, trabalho com audiovisual desde 2015 e ajudo marcas e agências a terem vídeos de qualidade com agilidade na entrega. Atendo clientes de Bauru até Ubatuba. Já participei de projetos como gravações dos cursos da Giovanna Antonelli, vídeos para o Ibis Hotel, trabalhos para o Sicredi, produções para a academia X Prime e gravação de clipes para alguns players do audiovisual. Busco me conectar com agências que queiram um parceiro de confiança em vídeo para somar nos projetos e facilitar o dia a dia do time. Poderíamos ter uma conversa rápida sobre possíveis parcerias em audiovisual? Podemos alinhar por aqui mesmo ou marcar uma call.`;
+
         let contacts = JSON.parse(localStorage.getItem('crm_contacts')) || [];
-        let deals = JSON.parse(localStorage.getItem('crm_deals')) || [];
-        let history = JSON.parse(localStorage.getItem('crm_history')) || [];
 
         function saveData() {
             localStorage.setItem('crm_contacts', JSON.stringify(contacts));
-            localStorage.setItem('crm_deals', JSON.stringify(deals));
-            localStorage.setItem('crm_history', JSON.stringify(history));
         }
 
-        function addHistory(action, contactName, details = '') {
-            history.unshift({
-                date: new Date().toLocaleString('pt-BR'),
-                action,
-                contactName,
-                details
-            });
-            saveData();
-            renderHistory();
-        }
+        function switchView(view) {
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('[id$="-tab"]').forEach(t => t.style.display = 'none');
-            
-            event.target.classList.add('active');
-            document.getElementById(tab + '-tab').style.display = 'block';
-            
-            if (tab === 'contacts') renderContacts();
-            if (tab === 'pipeline') renderPipeline();
-            if (tab === 'history') renderHistory();
+            if (view === 'contacts') {
+                document.getElementById('contacts-view').classList.remove('hidden');
+                document.getElementById('dashboard-view').classList.add('hidden');
+                renderContacts();
+            } else {
+                document.getElementById('contacts-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                renderDashboard();
+            }
         }
 
         function renderStats() {
             const total = contacts.length;
-            const customers = contacts.filter(c => c.status === 'customer').length;
-            const leads = contacts.filter(c => c.status === 'lead').length;
             const sent = contacts.filter(c => c.sent).length;
-            const notSent = contacts.filter(c => !c.sent).length;
-            const totalValue = deals.filter(d => d.stage !== 'lost' && d.stage !== 'won').reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0);
+            const pending = total - sent;
 
-            document.getElementById('stats').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-number">${total}</div>
-                    <div class="stat-label">Total Contatos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" style="color: #28a745;">${sent}</div>
-                    <div class="stat-label">Enviados ✅</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" style="color: #ffc107;">${notSent}</div>
-                    <div class="stat-label">Pendentes ⏳</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${customers}</div>
-                    <div class="stat-label">Clientes</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${leads}</div>
-                    <div class="stat-label">Leads</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">R$ ${totalValue.toLocaleString('pt-BR')}</div>
-                    <div class="stat-label">Valor Pipeline</div>
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-sent').textContent = sent;
+            document.getElementById('stat-pending').textContent = pending;
+
+            document.getElementById('dash-total').textContent = total;
+            document.getElementById('dash-sent').textContent = sent;
+            document.getElementById('dash-pending').textContent = pending;
+        }
+
+        function renderContacts() {
+            const board = document.getElementById('pipeline-board');
+            const searchTerm = document.getElementById('search-input')?.value?.toLowerCase() || '';
+            
+            const filtered = contacts.filter(c =>
+                !searchTerm ||
+                (c.name || '').toLowerCase().includes(searchTerm) ||
+                (c.phone || '').includes(searchTerm) ||
+                (c.company || '').toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                board.innerHTML = '<div class="column-empty" style="flex: 1 1 100%;">Nenhum contato encontrado</div>';
+                return;
+            }
+
+            board.innerHTML = filtered.map(contact => renderContactCard(contact)).join('');
+        }
+
+        function renderContactCard(contact) {
+            const phoneFormatted = contact.phone ? contact.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : '';
+            const msg = encodeURIComponent(contact.message || defaultMessage);
+            
+            return `
+                <div class="lead-card ${contact.sent ? 'sent' : 'pending'}">
+                    <div class="lead-card-header">
+                        <span class="lead-card-name">${(contact.name || 'Sem nome').substring(0, 25)}${(contact.name || '').length > 25 ? '...' : ''}</span>
+                        <button class="lead-card-delete" onclick="deleteContactById('${contact.id}')" title="Excluir">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                    <div class="lead-card-info">
+                        ${contact.phone ? `<div class="lead-card-detail">📱 ${phoneFormatted}</div>` : ''}
+                        ${contact.email ? `<div class="lead-card-detail">✉️ ${contact.email}</div>` : ''}
+                        ${contact.company ? `<div class="lead-card-detail">🏢 ${contact.company}</div>` : ''}
+                    </div>
+                    <span class="lead-card-status ${contact.sent ? 'sent' : 'pending'}">${contact.sent ? '✅ Enviado' : '⏳ Pendente'}</span>
+                    <a href="https://wa.me/${contact.phone}?text=${msg}" target="_blank" class="lead-card-whatsapp">
+                        💬 Enviar WhatsApp
+                    </a>
+                    <div class="lead-card-actions">
+                        <button onclick="toggleSent('${contact.id}')" class="${contact.sent ? 'sent-btn' : ''}">${contact.sent ? '❌ Desmarcar' : '✅ Enviado'}</button>
+                        <button onclick="editContact('${contact.id}')">✏️ Editar</button>
+                    </div>
                 </div>
             `;
         }
 
-        function renderContacts() {
-            const searchTerm = document.getElementById('search')?.value?.toLowerCase() || '';
-            const filtered = contacts.filter(c => 
-                c.name.toLowerCase().includes(searchTerm) ||
-                c.company?.toLowerCase().includes(searchTerm) ||
-                c.phone.includes(searchTerm)
+        function renderDashboard() {
+            const board = document.getElementById('dashboard-board');
+            const searchTerm = document.getElementById('search-input')?.value?.toLowerCase() || '';
+            
+            const filtered = contacts.filter(c =>
+                !searchTerm ||
+                (c.name || '').toLowerCase().includes(searchTerm) ||
+                (c.phone || '').includes(searchTerm)
             );
 
+            renderStats();
+
             if (filtered.length === 0) {
-                document.getElementById('contacts-list').innerHTML = '<div class="empty-state">Nenhum contato encontrado</div>';
+                board.innerHTML = '<div class="column-empty" style="flex: 1 1 100%;">Nenhum contato encontrado</div>';
                 return;
             }
 
-            const defaultMessage = `Oi, tudo bem? Me chamo Samuel, trabalho com audiovisual desde 2015 e ajudo marcas e agências a terem vídeos de qualidade com agilidade na entrega. Atendo clientes de Bauru até Ubatuba. Já participei de projetos como gravações dos cursos da Giovanna Antonelli, vídeos para o Ibis Hotel, trabalhos para o Sicredi, produções para a academia X Prime e gravação de clipes para alguns players do audiovisual. Busco me conectar com agências que queiram um parceiro de confiança em vídeo para somar nos projetos e facilitar o dia a dia do time. Poderíamos ter uma conversa rápida sobre possíveis parcerias em audiovisual? Podemos alinhar por aqui mesmo ou marcar uma call.`;
-
-            document.getElementById('contacts-list').innerHTML = filtered.map(contact => {
-                const msg = encodeURIComponent(contact.message || defaultMessage);
-                const phoneFormatted = contact.phone ? contact.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : '';
-                return `
-                <div class="contact-card">
-                    <div class="contact-info">
-                        <h3>${contact.name.substring(0, 40)}${contact.name.length > 40 ? '...' : ''} <span class="tag tag-${contact.status}">${contact.status === 'lead' ? 'Lead' : contact.status === 'customer' ? 'Cliente' : 'Inativo'}</span>${contact.sent ? ' ✅' : ' ⏳'}</h3>
-                        <p>${phoneFormatted || 'Sem telefone'}</p>
-                    </div>
-                    <div class="contact-actions">
-                        <a href="https://wa.me/${contact.phone}?text=${msg}" target="_blank" class="btn btn-whatsapp btn-icon" title="WhatsApp">💬</a>
-                        <button class="btn ${contact.sent ? 'btn-danger' : 'btn-primary'}" onclick="toggleSent('${contact.id}')" title="${contact.sent ? 'Desmarcar' : 'Marcar como enviado'}">${contact.sent ? '❌' : '✅'}</button>
-                        <button class="btn btn-primary" onclick="editContact('${contact.id}')" title="Editar">✏️</button>
-                        <button class="btn btn-danger" onclick="deleteContact('${contact.id}')" title="Excluir">🗑️</button>
-                    </div>
-                </div>
-            `}).join('');
+            board.innerHTML = filtered.map(contact => renderContactCard(contact)).join('');
         }
 
         function filterContacts() {
             renderContacts();
+        }
+
+        function openModal(contactId = null) {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('modal-title').textContent = contactId ? 'Editar Contato' : 'Novo Contato';
+            document.getElementById('delete-btn').style.display = contactId ? 'block' : 'none';
+
+            if (contactId) {
+                const contact = contacts.find(c => c.id === contactId);
+                document.getElementById('contact-id').value = contact.id;
+                document.getElementById('contact-name').value = contact.name || '';
+                document.getElementById('contact-phone').value = contact.phone || '';
+                document.getElementById('contact-email').value = contact.email || '';
+                document.getElementById('contact-company').value = contact.company || '';
+                document.getElementById('contact-status').value = contact.status || 'lead';
+                document.getElementById('contact-notes').value = contact.notes || '';
+            } else {
+                document.getElementById('contact-form').reset();
+                document.getElementById('contact-id').value = '';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+
+        function closeModalOutside(event) {
+            if (event.target === document.getElementById('modal-overlay')) {
+                closeModal();
+            }
+        }
+
+        function saveContact(e) {
+            e.preventDefault();
+            const id = document.getElementById('contact-id').value || Date.now().toString();
+            const existingContact = contacts.find(c => c.id === id);
+
+            const contact = {
+                id,
+                name: document.getElementById('contact-name').value,
+                phone: document.getElementById('contact-phone').value.replace(/\D/g, ''),
+                email: document.getElementById('contact-email').value,
+                company: document.getElementById('contact-company').value,
+                status: document.getElementById('contact-status').value,
+                notes: document.getElementById('contact-notes').value,
+                sent: existingContact?.sent || false,
+                message: existingContact?.message || '',
+                createdAt: existingContact?.createdAt || new Date().toISOString()
+            };
+
+            if (existingContact) {
+                const index = contacts.findIndex(c => c.id === id);
+                contacts[index] = contact;
+            } else {
+                contacts.push(contact);
+            }
+
+            saveData();
+            closeModal();
+            renderContacts();
+            renderStats();
+        }
+
+        function editContact(id) {
+            openModal(id);
+        }
+
+        function deleteContact() {
+            const id = document.getElementById('contact-id').value;
+            if (id && confirm('Tem certeza que deseja excluir este contato?')) {
+                contacts = contacts.filter(c => c.id !== id);
+                saveData();
+                closeModal();
+                renderContacts();
+                renderStats();
+            }
+        }
+
+        function deleteContactById(id) {
+            if (confirm('Tem certeza que deseja excluir este contato?')) {
+                contacts = contacts.filter(c => c.id !== id);
+                saveData();
+                renderContacts();
+                renderStats();
+            }
         }
 
         function toggleSent(id) {
@@ -581,182 +665,7 @@
                 contact.sent = !contact.sent;
                 saveData();
                 renderContacts();
-            }
-        }
-
-        function renderPipeline() {
-            const stages = [
-                { id: 'new', name: 'Novo', color: '#6C757D' },
-                { id: 'contacted', name: 'Contatado', color: '#17A2B8' },
-                { id: 'proposal', name: 'Proposta', color: '#FFC107' },
-                { id: 'negotiation', name: 'Negociação', color: '#FD7E14' },
-                { id: 'won', name: 'Ganho', color: '#28A745' },
-                { id: 'lost', name: 'Perdido', color: '#DC3545' }
-            ];
-
-            document.getElementById('pipeline').innerHTML = stages.map(stage => {
-                const stageDeals = deals.filter(d => d.stage === stage.id);
-                const total = stageDeals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0);
-
-                return `
-                    <div class="pipeline-column">
-                        <div class="pipeline-header" style="border-color: ${stage.color}">
-                            ${stage.name} (${stageDeals.length}) - R$ ${total.toLocaleString('pt-BR')}
-                        </div>
-                        ${stageDeals.map(deal => {
-                            const contact = contacts.find(c => c.id === deal.contactId);
-                            return `
-                                <div class="pipeline-item" onclick="editDeal('${deal.id}')">
-                                    <h4>${deal.title}</h4>
-                                    <p>${contact?.name || 'Sem contato'}</p>
-                                    <div class="value">R$ ${parseFloat(deal.value).toLocaleString('pt-BR')}</div>
-                                </div>
-                            `;
-                        }).join('')}
-                        <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="openDealModal('${stage.id}')">+ Nova Oportunidade</button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderHistory() {
-            if (history.length === 0) {
-                document.getElementById('history-list').innerHTML = '<div class="empty-state">Nenhuma atividade registrada</div>';
-                return;
-            }
-
-            document.getElementById('history-list').innerHTML = history.map(h => `
-                <div class="history-item">
-                    <div class="history-date">${h.date}</div>
-                    <strong>${h.action}</strong> - ${h.contactName}
-                    ${h.details ? `<p>${h.details}</p>` : ''}
-                </div>
-            `).join('');
-        }
-
-        function openModal(contactId = null) {
-            document.getElementById('modal').classList.add('active');
-            document.getElementById('modal-title').textContent = contactId ? 'Editar Contato' : 'Novo Contato';
-            
-            if (contactId) {
-                const contact = contacts.find(c => c.id === contactId);
-                document.getElementById('contact-id').value = contact.id;
-                document.getElementById('name').value = contact.name;
-                document.getElementById('phone').value = contact.phone;
-                document.getElementById('email').value = contact.email || '';
-                document.getElementById('company').value = contact.company || '';
-                document.getElementById('status').value = contact.status;
-                document.getElementById('message').value = contact.message || '';
-                document.getElementById('notes').value = contact.notes || '';
-            } else {
-                document.getElementById('contact-form').reset();
-                document.getElementById('contact-id').value = '';
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
-        }
-
-        function saveContact(e) {
-            e.preventDefault();
-            const id = document.getElementById('contact-id').value || Date.now().toString();
-            const isEdit = contacts.find(c => c.id === id);
-
-            const contact = {
-                id,
-                name: document.getElementById('name').value,
-                phone: document.getElementById('phone').value.replace(/\D/g, ''),
-                email: document.getElementById('email').value,
-                company: document.getElementById('company').value,
-                status: document.getElementById('status').value,
-                message: document.getElementById('message').value,
-                notes: document.getElementById('notes').value,
-                sent: isEdit ? isEdit.sent : false
-            };
-
-            if (isEdit) {
-                const index = contacts.findIndex(c => c.id === id);
-                contacts[index] = contact;
-                addHistory('Contato atualizado', contact.name);
-            } else {
-                contacts.push(contact);
-                addHistory('Novo contato criado', contact.name);
-            }
-
-            saveData();
-            closeModal();
-            renderContacts();
-            renderStats();
-            updateDealContacts();
-        }
-
-        function editContact(id) {
-            openModal(id);
-        }
-
-        function deleteContact(id) {
-            if (confirm('Tem certeza que deseja excluir este contato?')) {
-                const contact = contacts.find(c => c.id === id);
-                contacts = contacts.filter(c => c.id !== id);
-                deals = deals.filter(d => d.contactId !== id);
-                addHistory('Contato excluído', contact.name);
-                saveData();
-                renderContacts();
                 renderStats();
-            }
-        }
-
-        function openDealModal(stage = null) {
-            const select = document.getElementById('deal-contact');
-            select.innerHTML = contacts.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            
-            if (stage) document.getElementById('deal-stage').value = stage;
-            document.getElementById('deal-modal').classList.add('active');
-            document.getElementById('deal-form').reset();
-        }
-
-        function closeDealModal() {
-            document.getElementById('deal-modal').classList.remove('active');
-        }
-
-        function saveDeal(e) {
-            e.preventDefault();
-            const id = Date.now().toString();
-            const contactId = document.getElementById('deal-contact').value;
-            const contact = contacts.find(c => c.id === contactId);
-
-            const deal = {
-                id,
-                title: document.getElementById('deal-title').value,
-                contactId,
-                value: document.getElementById('deal-value').value,
-                stage: document.getElementById('deal-stage').value
-            };
-
-            deals.push(deal);
-            addHistory('Oportunidade criada', contact.name, `R$ ${parseFloat(deal.value).toLocaleString('pt-BR')} - ${deal.stage}`);
-            saveData();
-            closeDealModal();
-            renderPipeline();
-            renderStats();
-        }
-
-        function editDeal(id) {
-            const deal = deals.find(d => d.id === id);
-            if (!deal) return;
-
-            openDealModal(deal.stage);
-            document.getElementById('deal-title').value = deal.title;
-            document.getElementById('deal-contact').value = deal.contactId;
-            document.getElementById('deal-value').value = deal.value;
-            document.getElementById('deal-stage').value = deal.stage;
-        }
-
-        function updateDealContacts() {
-            const select = document.getElementById('deal-contact');
-            if (select) {
-                select.innerHTML = contacts.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             }
         }
 
@@ -764,32 +673,21 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            console.log('Arquivo selecionado:', file.name);
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
-                    console.log('Sheets:', workbook.SheetNames);
-                    
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
-
-                    console.log('Dados lidos:', jsonData.length, 'linhas');
 
                     if (!jsonData || jsonData.length < 2) {
                         alert('Arquivo vazio ou sem dados!');
                         return;
                     }
 
-                    const headers = jsonData[0].map(h => String(h).toLowerCase().trim());
-                    console.log('Cabeçalhos:', headers);
-                    
                     const nameIdx = 0;
                     const phoneIdx = 10;
-
-                    console.log('Índices - Nome:', nameIdx, 'Telefone:', phoneIdx);
 
                     let imported = 0;
                     for (let i = 1; i < jsonData.length; i++) {
@@ -812,9 +710,10 @@
                                 email: '',
                                 company: '',
                                 status: 'lead',
-                                message: '',
                                 notes: '',
-                                sent: false
+                                sent: false,
+                                message: '',
+                                createdAt: new Date().toISOString()
                             });
                             imported++;
                         }
@@ -825,19 +724,16 @@
                     renderStats();
                     alert(`Importados ${imported} contatos com sucesso!`);
                 } catch (err) {
-                    console.error('Erro:', err);
                     alert('Erro ao importar: ' + err.message);
                 }
-            };
-            reader.onerror = function() {
-                alert('Erro ao ler arquivo!');
             };
             reader.readAsArrayBuffer(file);
             event.target.value = '';
         }
 
-        renderStats();
+        // Inicialização
         renderContacts();
+        renderStats();
     </script>
 </body>
 </html>
