@@ -371,13 +371,6 @@ body {
                         </svg>
                         <span>WhatsApp Web</span>
                     </a>
-                    <button class="action-btn primary" onclick="openBatchModal()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        <span>Envio em Massa</span>
-                    </button>
             </div>
         </aside>
 
@@ -494,51 +487,7 @@ body {
         </div>
     </div>
 
-    <!-- Batch Send Modal -->
-    <div class="modal-overlay hidden" id="batch-modal" onclick="closeBatchModalOutside(event)">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Envio em Massa</h3>
-                <button class="modal-close" onclick="closeBatchModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Quantos contatos enviar?</label>
-                    <select class="form-select" id="batch-count">
-                        <option value="10">10 contatos</option>
-                        <option value="15">15 contatos</option>
-                        <option value="20">20 contatos</option>
-                        <option value="30">30 contatos</option>
-                        <option value="40">40 contatos</option>
-                        <option value="50">50 contatos</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Intervalo entre mensagens</label>
-                    <select class="form-select" id="batch-interval">
-                        <option value="60">1 minuto</option>
-                        <option value="120">2 minutos</option>
-                        <option value="180">3 minutos</option>
-                        <option value="240">4 minutos</option>
-                        <option value="300">5 minutos</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Contatos disponíveis: <span id="available-contacts">0</span></label>
-                </div>
-                <div id="batch-progress" class="hidden">
-                    <div style="margin-top:15px;padding:15px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">
-                        <div id="batch-status" style="font-size:14px;margin-bottom:8px;"></div>
-                        <div style="font-size:12px;color:var(--text-muted);" id="batch-timer"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeBatchModal()">Cancelar</button>
-                <button class="btn btn-primary" id="batch-start-btn" onclick="startBatchSend()">Iniciar Envio</button>
-            </div>
-        </div>
-    </div>
+
 
     <script>
         const defaultMessage = `Oi, tudo bem?
@@ -835,94 +784,6 @@ Poderíamos ter uma conversa rápida sobre possíveis parcerias em audiovisual? 
                 renderContacts();
                 renderStats();
             }
-        }
-
-        let batchInterval = null;
-        let batchContacts = [];
-        let batchIndex = 0;
-        let batchDelay = 0;
-
-        function openBatchModal() {
-            const newContacts = contacts.filter(c => !c.status || c.status === 'new');
-            document.getElementById('available-contacts').textContent = newContacts.length;
-            document.getElementById('batch-progress').classList.add('hidden');
-            document.getElementById('batch-start-btn').style.display = 'inline-block';
-            document.getElementById('batch-modal').classList.remove('hidden');
-        }
-
-        function closeBatchModal() {
-            if (batchInterval) {
-                clearInterval(batchInterval);
-                batchInterval = null;
-            }
-            document.getElementById('batch-modal').classList.add('hidden');
-        }
-
-        function closeBatchModalOutside(event) {
-            if (event.target === document.getElementById('batch-modal')) {
-                closeBatchModal();
-            }
-        }
-
-        function startBatchSend() {
-            const count = parseInt(document.getElementById('batch-count').value);
-            const interval = parseInt(document.getElementById('batch-interval').value);
-            
-            batchContacts = contacts.filter(c => !c.status || c.status === 'new').slice(0, count);
-            
-            if (batchContacts.length === 0) {
-                alert('Nenhum contato novo disponível!');
-                return;
-            }
-            
-            batchIndex = 0;
-            batchDelay = interval;
-            
-            document.getElementById('batch-progress').classList.remove('hidden');
-            document.getElementById('batch-start-btn').style.display = 'none';
-            
-            sendNextBatch();
-        }
-
-        function sendNextBatch() {
-            if (batchIndex >= batchContacts.length) {
-                document.getElementById('batch-status').textContent = `✅ Envio concluído! ${batchIndex} mensagens abertas.`;
-                document.getElementById('batch-timer').textContent = '';
-                document.getElementById('batch-start-btn').style.display = 'inline-block';
-                
-                batchContacts.forEach(c => {
-                    const contact = contacts.find(x => x.id === c.id);
-                    if (contact) {
-                        contact.status = 'contacted';
-                    }
-                });
-                saveData();
-                renderContacts();
-                renderStats();
-                return;
-            }
-            
-            const contact = batchContacts[batchIndex];
-            const phoneFormatted = contact.phone ? contact.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : '';
-            const msg = encodeURIComponent(contact.message || defaultMessage);
-            
-            document.getElementById('batch-status').textContent = `Enviando ${batchIndex + 1}/${batchContacts.length}: ${contact.name || phoneFormatted}`;
-            document.getElementById('batch-timer').textContent = `Próxima mensagem em ${batchDelay} segundos...`;
-            
-            window.open(`https://wa.me/${contact.phone}?text=${msg}`, '_blank');
-            
-            const contactIndex = contacts.findIndex(x => x.id === contact.id);
-            if (contactIndex >= 0) {
-                contacts[contactIndex].status = 'contacted';
-                saveData();
-                renderContacts();
-                renderStats();
-            }
-            
-            batchIndex++;
-            batchDelay = parseInt(document.getElementById('batch-interval').value);
-            
-            batchInterval = setTimeout(sendNextBatch, batchDelay * 1000);
         }
 
         function importXLSX(event) {
