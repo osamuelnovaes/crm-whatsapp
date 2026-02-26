@@ -495,13 +495,17 @@ body {
         function migrateContacts() {
             let changed = false;
             contacts.forEach(contact => {
-                if (contact.sent === true && !contact.status) {
+                if (contact.status === 'lead') {
+                    if (contact.sent === true) {
+                        contact.status = 'contacted';
+                    } else {
+                        contact.status = 'new';
+                    }
+                    changed = true;
+                } else if (contact.sent === true && (!contact.status || contact.status === 'new')) {
                     contact.status = 'contacted';
                     changed = true;
-                } else if (contact.sent === false && !contact.status) {
-                    contact.status = 'new';
-                    changed = true;
-                } else if (!contact.status) {
+                } else if (!contact.status || contact.status === 'new') {
                     contact.status = 'new';
                     changed = true;
                 }
