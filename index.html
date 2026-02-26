@@ -432,7 +432,7 @@ body {
                         <span class="stat-label">Respondidos</span>
                     </div>
                 </div>
-                <div class="pipeline-board" id="dashboard-board" style="flex-wrap: wrap; padding: 0; overflow-y: auto;"></div>
+                <div class="pipeline-board" id="dashboard-board"></div>
             </div>
         </main>
     </div>
@@ -602,17 +602,29 @@ body {
             const filtered = contacts.filter(c =>
                 !searchTerm ||
                 (c.name || '').toLowerCase().includes(searchTerm) ||
-                (c.phone || '').includes(searchTerm)
+                (c.phone || '').includes(searchTerm) ||
+                (c.company || '').toLowerCase().includes(searchTerm)
             );
 
             renderStats();
 
-            if (filtered.length === 0) {
-                board.innerHTML = '<div class="column-empty" style="flex: 1 1 100%;">Nenhum contato encontrado</div>';
-                return;
-            }
-
-            board.innerHTML = filtered.map(contact => renderContactCard(contact)).join('');
+            board.innerHTML = columns.map(col => {
+                const colContacts = filtered.filter(c => c.status === col.id || (!c.status && col.id === 'new'));
+                return `
+                    <div class="pipeline-column ${col.class}">
+                        <div class="pipeline-column-header">
+                            <div class="column-header-left">
+                                <span class="column-title">${col.title}</span>
+                                <span class="column-count">${colContacts.length}</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-column-body" ondragover="allowDrop(event)" ondrop="drop(event, '${col.id}')">
+                            ${colContacts.length === 0 ? '<div class="column-empty">Nenhum contato</div>' : ''}
+                            ${colContacts.map(contact => renderContactCard(contact)).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function filterContacts() {
