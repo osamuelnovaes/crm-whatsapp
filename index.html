@@ -187,8 +187,21 @@ body {
 .lead-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border); }
 .lead-card:active { cursor: grabbing; }
 
-.lead-card.sent { border-left: 3px solid var(--success); }
-.lead-card.pending { border-left: 3px solid #fbbf24; }
+.column-new { border-left: 3px solid #6366f1; }
+.column-contacted { border-left: 3px solid #fbbf24; }
+.column-replied { border-left: 3px solid #22c55e; }
+
+.lead-card.new { border-left: 3px solid #6366f1; }
+.lead-card.contacted { border-left: 3px solid #fbbf24; }
+.lead-card.replied { border-left: 3px solid #22c55e; }
+
+.lead-card-status.new { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+.lead-card-status.contacted { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.lead-card-status.replied { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+.stat-value.new { color: #6366f1; }
+.stat-value.contacted { color: #fbbf24; }
+.stat-value.replied { color: #22c55e; }
 
 .lead-card-header { display: flex; align-items: flex-start; gap: 8px; }
 
@@ -376,20 +389,24 @@ body {
 
                 <div class="stats-bar">
                     <div class="stat-item">
+                        <span class="stat-value new" id="stat-new">0</span>
+                        <span class="stat-label">Novos</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value contacted" id="stat-contacted">0</span>
+                        <span class="stat-label">Contatados</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value replied" id="stat-replied">0</span>
+                        <span class="stat-label">Respondidos</span>
+                    </div>
+                    <div class="stat-item">
                         <span class="stat-value total" id="stat-total">0</span>
                         <span class="stat-label">Total</span>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-value pending" id="stat-pending">0</span>
-                        <span class="stat-label">Pendentes</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-value sent" id="stat-sent">0</span>
-                        <span class="stat-label">Enviados</span>
-                    </div>
                 </div>
 
-                <div class="pipeline-board" id="pipeline-board" style="flex-wrap: wrap; padding: 20px 24px; overflow-y: auto;"></div>
+                <div class="pipeline-board" id="pipeline-board"></div>
             </div>
 
             <!-- Dashboard View -->
@@ -403,12 +420,16 @@ body {
                         <span class="stat-label">Total de Contatos</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value sent" id="dash-sent">0</span>
-                        <span class="stat-label">Enviados</span>
+                        <span class="stat-value new" id="dash-new">0</span>
+                        <span class="stat-label">Novos</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value pending" id="dash-pending">0</span>
-                        <span class="stat-label">Pendentes</span>
+                        <span class="stat-value contacted" id="dash-contacted">0</span>
+                        <span class="stat-label">Contatados</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value replied" id="dash-replied">0</span>
+                        <span class="stat-label">Respondidos</span>
                     </div>
                 </div>
                 <div class="pipeline-board" id="dashboard-board" style="flex-wrap: wrap; padding: 0; overflow-y: auto;"></div>
@@ -445,7 +466,9 @@ body {
                     <div class="form-group">
                         <label class="form-label">Status</label>
                         <select class="form-select" id="contact-status">
-                            <option value="lead">Lead</option>
+                            <option value="new">Novo</option>
+                            <option value="contacted">Contatado</option>
+                            <option value="replied">Respondido</option>
                             <option value="customer">Cliente</option>
                             <option value="inactive">Inativo</option>
                         </select>
@@ -490,17 +513,26 @@ body {
 
         function renderStats() {
             const total = contacts.length;
-            const sent = contacts.filter(c => c.sent).length;
-            const pending = total - sent;
+            const newCount = contacts.filter(c => !c.status || c.status === 'new').length;
+            const contacted = contacts.filter(c => c.status === 'contacted').length;
+            const replied = contacts.filter(c => c.status === 'replied').length;
 
             document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-sent').textContent = sent;
-            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-new').textContent = newCount;
+            document.getElementById('stat-contacted').textContent = contacted;
+            document.getElementById('stat-replied').textContent = replied;
 
             document.getElementById('dash-total').textContent = total;
-            document.getElementById('dash-sent').textContent = sent;
-            document.getElementById('dash-pending').textContent = pending;
+            document.getElementById('dash-new').textContent = newCount;
+            document.getElementById('dash-contacted').textContent = contacted;
+            document.getElementById('dash-replied').textContent = replied;
         }
+
+        const columns = [
+            { id: 'new', title: 'Novos Contatos', class: 'column-new' },
+            { id: 'contacted', title: 'Contatados', class: 'column-contacted' },
+            { id: 'replied', title: 'Respondidos', class: 'column-replied' }
+        ];
 
         function renderContacts() {
             const board = document.getElementById('pipeline-board');
@@ -513,20 +545,33 @@ body {
                 (c.company || '').toLowerCase().includes(searchTerm)
             );
 
-            if (filtered.length === 0) {
-                board.innerHTML = '<div class="column-empty" style="flex: 1 1 100%;">Nenhum contato encontrado</div>';
-                return;
-            }
-
-            board.innerHTML = filtered.map(contact => renderContactCard(contact)).join('');
+            board.innerHTML = columns.map(col => {
+                const colContacts = filtered.filter(c => c.status === col.id || (!c.status && col.id === 'new'));
+                return `
+                    <div class="pipeline-column ${col.class}">
+                        <div class="pipeline-column-header">
+                            <div class="column-header-left">
+                                <span class="column-title">${col.title}</span>
+                                <span class="column-count">${colContacts.length}</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-column-body" ondragover="allowDrop(event)" ondrop="drop(event, '${col.id}')">
+                            ${colContacts.length === 0 ? '<div class="column-empty">Nenhum contato</div>' : ''}
+                            ${colContacts.map(contact => renderContactCard(contact)).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderContactCard(contact) {
             const phoneFormatted = contact.phone ? contact.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : '';
             const msg = encodeURIComponent(contact.message || defaultMessage);
+            const status = contact.status || 'new';
+            const statusLabels = { new: 'Novo', contacted: 'Contatado', replied: 'Respondido' };
             
             return `
-                <div class="lead-card ${contact.sent ? 'sent' : 'pending'}">
+                <div class="lead-card ${status}" draggable="true" ondragstart="drag(event, '${contact.id}')">
                     <div class="lead-card-header">
                         <span class="lead-card-name">${(contact.name || 'Sem nome').substring(0, 25)}${(contact.name || '').length > 25 ? '...' : ''}</span>
                         <button class="lead-card-delete" onclick="deleteContactById('${contact.id}')" title="Excluir">
@@ -538,12 +583,12 @@ body {
                         ${contact.email ? `<div class="lead-card-detail">✉️ ${contact.email}</div>` : ''}
                         ${contact.company ? `<div class="lead-card-detail">🏢 ${contact.company}</div>` : ''}
                     </div>
-                    <span class="lead-card-status ${contact.sent ? 'sent' : 'pending'}">${contact.sent ? '✅ Enviado' : '⏳ Pendente'}</span>
+                    <span class="lead-card-status ${status}">${statusLabels[status]}</span>
                     <a href="https://wa.me/${contact.phone}?text=${msg}" target="_blank" class="lead-card-whatsapp">
                         💬 Enviar WhatsApp
                     </a>
                     <div class="lead-card-actions">
-                        <button onclick="toggleSent('${contact.id}')" class="${contact.sent ? 'sent-btn' : ''}">${contact.sent ? '❌ Desmarcar' : '✅ Enviado'}</button>
+                        <button onclick="changeStatus('${contact.id}')">➡️ Mover</button>
                         <button onclick="editContact('${contact.id}')">✏️ Editar</button>
                     </div>
                 </div>
@@ -586,7 +631,7 @@ body {
                 document.getElementById('contact-phone').value = contact.phone || '';
                 document.getElementById('contact-email').value = contact.email || '';
                 document.getElementById('contact-company').value = contact.company || '';
-                document.getElementById('contact-status').value = contact.status || 'lead';
+                document.getElementById('contact-status').value = contact.status || 'new';
                 document.getElementById('contact-notes').value = contact.notes || '';
             } else {
                 document.getElementById('contact-form').reset();
@@ -615,9 +660,8 @@ body {
                 phone: document.getElementById('contact-phone').value.replace(/\D/g, ''),
                 email: document.getElementById('contact-email').value,
                 company: document.getElementById('contact-company').value,
-                status: document.getElementById('contact-status').value,
+                status: document.getElementById('contact-status').value === 'customer' ? 'replied' : (existingContact?.status || 'new'),
                 notes: document.getElementById('contact-notes').value,
-                sent: existingContact?.sent || false,
                 message: existingContact?.message || '',
                 createdAt: existingContact?.createdAt || new Date().toISOString()
             };
@@ -626,6 +670,7 @@ body {
                 const index = contacts.findIndex(c => c.id === id);
                 contacts[index] = contact;
             } else {
+                contact.status = 'new';
                 contacts.push(contact);
             }
 
@@ -659,10 +704,35 @@ body {
             }
         }
 
-        function toggleSent(id) {
+        function changeStatus(id) {
+            const contact = contacts.find(c => c.id === id);
+            if (!contact) return;
+            
+            const currentStatus = contact.status || 'new';
+            const statusOrder = ['new', 'contacted', 'replied'];
+            const currentIndex = statusOrder.indexOf(currentStatus);
+            const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
+            
+            contact.status = nextStatus;
+            saveData();
+            renderContacts();
+            renderStats();
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev, id) {
+            ev.dataTransfer.setData("text", id);
+        }
+
+        function drop(ev, newStatus) {
+            ev.preventDefault();
+            const id = ev.dataTransfer.getData("text");
             const contact = contacts.find(c => c.id === id);
             if (contact) {
-                contact.sent = !contact.sent;
+                contact.status = newStatus;
                 saveData();
                 renderContacts();
                 renderStats();
@@ -709,9 +779,8 @@ body {
                                 phone: String(phone || '').replace(/\D/g, ''),
                                 email: '',
                                 company: '',
-                                status: 'lead',
+                                status: 'new',
                                 notes: '',
-                                sent: false,
                                 message: '',
                                 createdAt: new Date().toISOString()
                             });
