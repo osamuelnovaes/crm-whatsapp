@@ -492,6 +492,27 @@ body {
 
         let contacts = JSON.parse(localStorage.getItem('crm_contacts')) || [];
 
+        function migrateContacts() {
+            let changed = false;
+            contacts.forEach(contact => {
+                if (contact.sent === true && !contact.status) {
+                    contact.status = 'contacted';
+                    changed = true;
+                } else if (contact.sent === false && !contact.status) {
+                    contact.status = 'new';
+                    changed = true;
+                } else if (!contact.status) {
+                    contact.status = 'new';
+                    changed = true;
+                }
+                delete contact.sent;
+            });
+            if (changed) {
+                saveData();
+            }
+        }
+        migrateContacts();
+
         function saveData() {
             localStorage.setItem('crm_contacts', JSON.stringify(contacts));
         }
