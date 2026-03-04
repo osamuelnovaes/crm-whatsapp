@@ -643,8 +643,23 @@ Poderíamos ter uma conversa rápida sobre possíveis parcerias em audiovisual? 
 
             renderStats();
 
-            board.innerHTML = columns.map(col => {
-                const colContacts = filtered.filter(c => c.status === col.id || (!c.status && col.id === 'new'));
+
+            const defaultMessage = `Oi, tudo bem?
+
+Me chamo Samuel, trabalho com audiovisual desde 2015 e ajudo marcas e agências a terem vídeos de qualidade com agilidade na entrega. Atendo clientes de Bauru até Ubatuba.
+
+Já participei de projetos como gravações dos cursos da Giovanna Antonelli, vídeos para o Ibis Hotel, trabalhos para o Sicredi, produções para a academia X Prime e gravação de clipes para alguns players do audiovisual.
+
+Busco me conectar com agências que queiram um parceiro de confiança em vídeo para somar nos projetos e facilitar o dia a dia do time.
+
+Aqui esta minha apresentação, coloquei alguns trabalhos destaques para te mostrar!
+https://apresentacao-samuel.vercel.app/
+
+Poderíamos ter uma conversa rápida sobre possíveis parcerias em audiovisual? Podemos alinhar por aqui mesmo ou marcar uma call.`;
+
+            document.getElementById('contacts-list').innerHTML = filtered.map(contact => {
+                const msg = encodeURIComponent(contact.message || defaultMessage);
+                const phoneFormatted = contact.phone ? contact.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : '';
                 return `
                     <div class="pipeline-column ${col.class}">
                         <div class="pipeline-column-header">
